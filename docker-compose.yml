@@ -1,0 +1,39 @@
+version: '3'
+services:
+  sreader:
+    build:
+      context: ./sreader
+      args:
+        sensor_flags: ALL
+    depends_on:
+      - mosquitto
+    restart: unless-stopped
+    privileged: true
+    networks:
+      - iot-client
+    volumes:
+      - ./etc/sreader.yml:/sreader/sreader.yml:ro
+    environment:
+      - IOTSR_DEVICE_ID=${IOTSR_DEVICE_ID}
+      - IOTSR_MQTT_HOST=mosquitto
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+  mosquitto:
+    image: eclipse-mosquitto
+    restart: unless-stopped
+    networks:
+      - iot-client
+    volumes:
+      - ./etc/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./var/lib/mosquitto:/mosquitto/data
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200k"
+        max-file: "10"
+
+networks:
+  iot-client:
