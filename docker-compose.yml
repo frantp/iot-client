@@ -8,11 +8,14 @@ services:
     depends_on:
       - mosquitto
     restart: unless-stopped
-    privileged: true
+    #privileged: true
     networks:
-      - iot-client
+      - internal
     volumes:
       - ./etc/sreader.yml:/sreader/sreader.yml:ro
+    devices:
+    - "/dev/i2c-1:/dev/i2c-1"
+    - "/dev/ttyAMA0:/dev/ttyAMA0"
     environment:
       - IOTSR_DEVICE_ID=${IOTSR_DEVICE_ID}
       - IOTSR_MQTT_HOST=mosquitto
@@ -25,10 +28,10 @@ services:
     image: eclipse-mosquitto
     restart: unless-stopped
     networks:
-      - iot-client
+      - internal
     volumes:
       - ./etc/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
-      - ./var/lib/mosquitto:/mosquitto/data
+      - mosquitto:/mosquitto/data
     logging:
       driver: "json-file"
       options:
@@ -36,4 +39,7 @@ services:
         max-file: "10"
 
 networks:
-  iot-client:
+  internal:
+
+volumes:
+  mosquitto:
