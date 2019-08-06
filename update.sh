@@ -12,12 +12,10 @@ if [ -n "$changed" ]; then
 fi
 
 # Config
-url="https://raw.githubusercontent.com/frantp/iot-utils/master/cfg/ln/${IOTSR_DEVICE_ID}.yml"
+url="https://raw.githubusercontent.com/frantp/iot-utils/master/cfg/ln/${IOTSR_DEVICE_ID}.conf"
 relink="$(wget -qO- "${url}")"
 if [ -n "$relink" ]; then
-    urlf="$(dirname "${url}")/${relink}"
-    ofile="./etc/sreader.yml"
-    wget -qO "${ofile}" "${urlf}"
+    wget -qO "./etc/sreader.conf" "$(dirname "${url}")/${relink}"
 else
     echo "File not found at '${url}'" &>2
 fi
