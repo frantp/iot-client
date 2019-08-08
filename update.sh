@@ -1,7 +1,6 @@
 #!/bin/sh
 
 cd "$(dirname "$0")"
-export IOTSR_DEVICE_ID="$(hostname)"
 
 # Code
 git fetch
