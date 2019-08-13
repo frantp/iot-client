@@ -3,8 +3,6 @@ services:
   sreader:
     build:
       context: ./sreader
-      args:
-        sensor_flags: ALL
     depends_on:
       - mosquitto
     restart: unless-stopped
@@ -14,16 +12,17 @@ services:
     volumes:
       - ./etc/sreader.conf:/sreader/sreader.conf:ro
     devices:
-    - "/dev/i2c-1:/dev/i2c-1"
-    - "/dev/ttyAMA0:/dev/ttyAMA0"
+      - "/dev/gpiomem:/dev/gpiomem"
+      - "/dev/i2c-1:/dev/i2c-1"
+      - "/dev/ttyAMA0:/dev/ttyAMA0"
     environment:
       - IOTSR_DEVICE_ID=${IOTSR_DEVICE_ID}
       - IOTSR_MQTT_HOST=mosquitto
     logging:
       driver: "json-file"
       options:
-        max-size: "200k"
-        max-file: "10"
+        max-size: "128k"
+        max-file: "8"
   mosquitto:
     image: eclipse-mosquitto
     restart: unless-stopped
@@ -35,8 +34,8 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "200k"
-        max-file: "10"
+        max-size: "128k"
+        max-file: "8"
 
 networks:
   internal:
