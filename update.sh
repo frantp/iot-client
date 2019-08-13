@@ -1,5 +1,7 @@
 #!/bin/sh
 
+die() { [ "$#" -eq 0 ] || echo "$*" >&2; exit 1; }
+
 cd "$(dirname "$0")"
 
 # Code
@@ -11,10 +13,7 @@ if [ -n "$changed" ]; then
 fi
 
 # Config
-url="https://raw.githubusercontent.com/frantp/iot-utils/master/cfg/ln/${IOTSR_DEVICE_ID}.conf"
-relink="$(wget -qO- "${url}")"
-if [ -n "$relink" ]; then
-    wget -qO "./etc/sreader.conf" "$(dirname "${url}")/${relink}"
-else
-    echo "File not found at '${url}'" &>2
-fi
+url="https://api.github.com/repos/frantp/iot-utils/contents/cfg/id/${IOTSR_DEVICE_ID}.conf"
+res="$(wget "${url}" -qO-)" || \
+    die "Configuration file not found at '${url}'"
+echo "${res}" | tr -d '\r\n' | jq -r .content | base64 -d > "./etc/sreader.conf"
