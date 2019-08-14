@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 die() { [ "$#" -eq 0 ] || echo "$*" >&2; exit 1; }
 
@@ -43,11 +43,11 @@ cd "$(dirname "$0")"
 
 # Code
 echo "Checking source code updates"
-git fetch
+git fetch > /dev/null
 changed="$(git log --oneline master..origin/master)"
 if [ -n "$changed" ]; then
     echo "Updating source code"
-    git pull -X theirs > /dev/null
+    git reset --hard origin/master > /dev/null
     echo "Rebuilding containers"
     docker-compose up -d --build
 else
