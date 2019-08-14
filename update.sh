@@ -48,6 +48,7 @@ changed="$(git log --oneline master..origin/master)"
 if [ -n "$changed" ]; then
     echo "Updating source code"
     git reset --hard origin/master > /dev/null
+    git submodule update --remote > /dev/null
     echo "Rebuilding containers"
     docker-compose up -d --build
 else
