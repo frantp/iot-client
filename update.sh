@@ -2,6 +2,10 @@
 
 die() { [ "$#" -eq 0 ] || echo "$*" >&2; exit 1; }
 
+usage() {
+    echo "Usage: $0 <cfg_url>"
+}
+
 download_github_file() {
     url="${1?"URL not provided"}"
     filename="$(basename "${url}")"
@@ -37,7 +41,7 @@ download_github_dir() {
     fi
 }
 
-cfg_url_prefix="${1?"$(usage)"}"
+cfg_url="${1?"$(usage)"}"
 
 cd "$(dirname "$0")"
 
@@ -57,9 +61,8 @@ fi
 
 # Config
 echo "Updating configuration files"
-url="${cfg_url_prefix}/${IOTSR_DEVICE_ID}"
 cd "etc"
-download_github_dir "${url}"
+download_github_dir "${cfg_url}"
 cd ..
 
 echo "Finished"
