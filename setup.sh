@@ -18,6 +18,8 @@ usage() {
     echo ""
     echo "Options:"
     echo "  -h             Show this help message"
+    echo "  -m             Wait after mounting image to allow for manual modifications"
+    echo "                 (valid only when an image file is specified)"
     echo "  -p <user>      Change password for user"
     echo "  -n <hostname>  Change hostname"
     echo "  -s             Enable SSH server"
@@ -50,9 +52,10 @@ MARKER_END="### --------- ###"
 # Parse arguments
 wifi_ssids=()
 env_strs=()
-while getopts "hp:n:srw:c:i:e:x" arg; do
+while getopts "hmp:n:srw:c:i:e:x" arg; do
     case "${arg}" in
         h) usage; exit 0 ;;
+        m) wait_manual=true ;;
         p) passwd_user="${OPTARG}" ;;
         n) host_name="${OPTARG}" ;;
         s) enable_ssh=true ;;
@@ -108,6 +111,11 @@ if [ -f "${init_path}" ]; then
     mount "/dev/mapper/${boot_map}" "${boot_dir}" && \
     mount "/dev/mapper/${root_map}" "${root_dir}" || \
         die "Failed"
+
+    # Wait for manual configuration
+    if [ -n "${wait_manual}" ]; then
+        read -p "Waiting, press ENTER to continue"
+    fi
 else
     root_dir="${init_path}"
     boot_dir="${2:-${root_dir}/boot}"
@@ -194,6 +202,7 @@ fi
 
 # Set environment variable
 for env_str in "${env_strs[@]}"; do
+    echo "Setting environment variable '${env_str}'"
     env_var="${env_str%%=*}"
     sed -i "/^${env_var}=/d" "/etc/environment" && echo "${env_str}" >> "/etc/environment"
 done
