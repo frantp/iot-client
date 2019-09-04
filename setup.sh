@@ -219,6 +219,7 @@ if [ -n "${install_iot_client}" ]; then
     chmod +x "${root_dir}/${INSTALLER_BIN}" && \
     end="$(tail -n 1 "${ouf_file}")" && sed -i '$d' "${ouf_file}" && \
 cfg="${MARKER_STR}
+set -a; . \"/etc/environment\"; set +a
 mkdir -p \"$(dirname "${INSTALLER_LOG}")\"
 \"${INSTALLER_BIN}\" >> \"${INSTALLER_LOG}\"" 2>&1 && \\
 rm \"${INSTALLER_BIN}\" && \\
