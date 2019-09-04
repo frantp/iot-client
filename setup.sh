@@ -125,7 +125,7 @@ fi
 if [ -n "${passwd_user}" ]; then
     echo "Changing password for user '${passwd_user}'"
     passwd="$(openssl passwd -1)" && \
-    sed -i "s/${passwd_user}:[^:]*/${passwd_user}:${passwd}/" "${root_dir}/etc/shadow" || \
+    sed -i "s|${passwd_user}:[^:]*|${passwd_user}:${passwd}|" "${root_dir}/etc/shadow" || \
         echo "Failed"
 fi
 
