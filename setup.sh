@@ -27,7 +27,7 @@ usage() {
     echo "  -w <ssid>      Add WiFi SSID and password (can be defined multiple times)"
     echo "  -c <code>      Set WiFi country code"
     echo "  -i <ip>        Set static IP"
-    echo "  -e <env_str>   Set environemnt variable, with the form VAR=VAL (can be"
+    echo "  -e <env_str>   Set environment variable, with the form VAR=VAL (can be"
     echo "                 defined multiple times)"
     echo "  -x             Install IOT client; SREADER_CFG_URL should be set"
 }
@@ -203,8 +203,9 @@ fi
 # Set environment variable
 for env_str in "${env_strs[@]}"; do
     echo "Setting environment variable '${env_str}'"
+    out_file="${root_dir}/etc/environment"
     env_var="${env_str%%=*}"
-    sed -i "/^${env_var}=/d" "/etc/environment" && echo "${env_str}" >> "/etc/environment"
+    sed -i "/^${env_var}=/d" "${out_file}" && echo "${env_str}" >> "${out_file}"
 done
 
 # Install IOT client
