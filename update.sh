@@ -33,13 +33,14 @@ done
 shift $(( OPTIND - 1 ))
 
 SRC_DIR="/opt/iot-client"
-EXE_FILE="/usr/local/bin/sreader"
+MAIN_EXE="/usr/local/bin/sreader"
 LIB_DIR="/var/lib/sreader"
 LOG_DIR="/var/log/sreader"
 SERVICES_DIR="/etc/systemd/system"
-CRON_FILE="/etc/cron.hourly/sreader"
-UPDATER_FILE="/usr/local/bin/sreader-update"
-LOGROTATE_FILE="/etc/logrotate.d/sreader"
+CRON_EXE="/etc/cron.hourly/sreader"
+UPDATER_EXE="/usr/local/bin/sreader-update"
+UPDATER_LOG="${LOG_DIR}/updater.log"
+LOGROTATE_CFG="/etc/logrotate.d/sreader"
 
 cfg_url="${1:-${SREADER_CFG_URL}}"
 
@@ -57,25 +58,30 @@ if [ -n "${force}" ] || [ -n "${changed}" ]; then
     mkdir -p \"${LIB_DIR}\" \"${LOG_DIR}\"
 
     echo "- Installing Python environment"
+
     python3 -m venv "${LIB_DIR}/env"
     . "${LIB_DIR}/env/bin/activate"
     pip3 install --no-cache-dir -r "sreader/requirements.txt"
     deactivate
 
     echo "- Setting up environment"
-    cp "logrotate.conf" "${LOGROTATE_FILE}"
+
+    cp "logrotate.conf" "${LOGROTATE_CFG}"
+
     echo "#/bin/sh
-\"${LIB_DIR}/env/bin/python3\" \"${SRC_DIR}/sreader/src/loop.py\" \"$@\"" > "${EXE_FILE}"
-    chmod +x "${EXE_FILE}"
+\"${LIB_DIR}/env/bin/python3\" \"${SRC_DIR}/sreader/src/loop.py\" \"\$@\"" > "${MAIN_EXE}"
+    chmod +x "${MAIN_EXE}"
+
     cp "sreader.service" "${SERVICES_DIR}"
     systemctl daemon-reload
     systemctl enable sreader
-    cp "crontab.sh" "${CRON_FILE}"
+
     echo "#/bin/sh
-\"${UPDATER_EXE}\" \"\${SREADER_CFG_URL}\" >> \"${UPDATER_LOG}\" 2>&1" > "${EXE_FILE}"
-    chmod +x "${CRON_FILE}"
-    cp "$0" "${UPDATER_FILE}"
-    chmod +x "${UPDATER_FILE}"
+\"${UPDATER_EXE}\" \"\${SREADER_CFG_URL}\" >> \"${UPDATER_LOG}\" 2>&1" > "${CRON_EXE}"
+    chmod +x "${CRON_EXE}"
+
+    cp "$0" "${UPDATER_EXE}"
+    chmod +x "${UPDATER_EXE}"
 else
     echo "No updates"
 fi

@@ -19,14 +19,14 @@ raspi-config nonint do_serial 0
 
 # Dependencies
 echo "Installing dependencies"
-until installed; do
+until [ -n "${installed}" ]; do
     apt-get -qq update && \
     apt-get -qq install curl git jq python3 python3-venv mosquitto && \
     installed=true || true
-    if [ -z "${installed}" ]; do
+    if [ -z "${installed}" ]; then
         echo "Retrying installation"
         sleep 1
-    done
+    fi
 done
 systemctl enable mosquitto
 

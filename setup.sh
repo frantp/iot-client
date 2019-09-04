@@ -221,7 +221,7 @@ if [ -n "${install_iot_client}" ]; then
 cfg="${MARKER_STR}
 set -a; . \"/etc/environment\"; set +a
 mkdir -p \"$(dirname "${INSTALLER_LOG}")\"
-\"${INSTALLER_BIN}\" >> \"${INSTALLER_LOG}\"" 2>&1 && \\
+\"${INSTALLER_BIN}\" >> \"${INSTALLER_LOG}\" 2>&1 && \\
 rm \"${INSTALLER_BIN}\" && \\
 sed -i \"/^${MARKER_STR}/,/^${MARKER_END}/d\" \"/etc/rc.local\"
 ${MARKER_END}
