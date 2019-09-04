@@ -8,6 +8,8 @@ usage() {
     echo "  cfg_url  URL to search for configuration files (defaults to SREADER_CFG_URL)"
 }
 
+SRC_DIR="/opt/iot-client"
+
 cfg_url="${1:-${SREADER_CFG_URL}}"
 
 # Configuration
@@ -23,6 +25,6 @@ systemctl enable mosquitto
 
 # IOT Client
 echo "Installing IOT client"
-rm -rf "${src_dir}"
-git clone --recurse-submodules "https://github.com/frantp/iot-client.git" "${src_dir}"
-"${src_dir}/update.sh" "${cfg_url}"
+rm -rf "${SRC_DIR}"
+git clone --recurse-submodules "https://github.com/frantp/iot-client.git" "${SRC_DIR}"
+"${SRC_DIR}/update.sh" "${cfg_url}"
