@@ -19,8 +19,15 @@ raspi-config nonint do_serial 0
 
 # Dependencies
 echo "Installing dependencies"
-apt-get -qq update
-apt-get -qq install curl git jq python3 python3-venv mosquitto
+until installed; do
+    apt-get -qq update && \
+    apt-get -qq install curl git jq python3 python3-venv mosquitto && \
+    installed=true || true
+    if [ -z "${installed}" ]; do
+        echo "Retrying installation"
+        sleep 1
+    done
+done
 systemctl enable mosquitto
 
 # IOT Client
