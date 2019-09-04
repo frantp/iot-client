@@ -4,10 +4,14 @@ die() { [ "$#" -eq 0 ] || echo "$*" >&2; exit 1; }
 
 usage() {
     echo ""
-    echo "Usage: $0 [cfg_url]"
+    echo "Usage: $0 [options] [cfg_url]"
     echo ""
     echo "Arguments:"
     echo "  cfg_url  URL to search for configuration files (defaults to SREADER_CFG_URL)"
+    echo ""
+    echo "Options:"
+    echo "  -h  Show this help message"
+    echo "  -f  Force update"
 }
 
 download_github_file() {
@@ -18,6 +22,15 @@ download_github_file() {
     echo "${res}" | tr -d '\r\n' | jq -r '.content' | base64 -d > "${path}"
     echo "- Downloaded '${url}' to '${path}'"
 }
+
+# Parse arguments
+while getopts "hf" arg; do
+    case "${arg}" in
+        h) usage; exit 0 ;;
+        f) force=true ;;
+    esac
+done
+shift $(( OPTIND - 1 ))
 
 SRC_DIR="/opt/iot-client"
 EXE_FILE="/usr/local/bin/sreader"
@@ -36,7 +49,7 @@ cd "${SRC_DIR}"
 echo "Checking source code updates"
 git fetch > /dev/null
 changed="$(git log --oneline master..origin/master 2> /dev/null)"
-if [ -n "$changed" ]; then
+if [ -n "${force}" ] || [ -n "${changed}" ]; then
     echo "- Updating source code"
     git reset --hard origin/master > /dev/null
     git submodule update --remote > /dev/null

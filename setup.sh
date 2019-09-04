@@ -220,9 +220,9 @@ if [ -n "${install_iot_client}" ]; then
     end="$(tail -n 1 "${ouf_file}")" && sed -i '$d' "${ouf_file}" && \
 cfg="${MARKER_STR}
 mkdir -p \"$(dirname "${INSTALLER_LOG}")\"
-\"${INSTALLER_BIN}\" >> ${INSTALLER_LOG} 2>&1 && \\
+\"${INSTALLER_BIN}\" >> \"${INSTALLER_LOG}\"" 2>&1 && \\
 rm \"${INSTALLER_BIN}\" && \\
-sed -i \"/^${MARKER_STR}/,/^${MARKER_END}/d\" /etc/rc.local
+sed -i \"/^${MARKER_STR}/,/^${MARKER_END}/d\" \"/etc/rc.local\"
 ${MARKER_END}
 ${end}" && \
     echo "${cfg}" >> "${ouf_file}" || \

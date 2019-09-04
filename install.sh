@@ -27,4 +27,4 @@ systemctl enable mosquitto
 echo "Installing IOT client"
 rm -rf "${SRC_DIR}"
 git clone --recurse-submodules "https://github.com/frantp/iot-client.git" "${SRC_DIR}"
-"${SRC_DIR}/update.sh" "${cfg_url}"
+"${SRC_DIR}/update.sh" -f "${cfg_url}"
