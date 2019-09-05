@@ -53,6 +53,25 @@ changed="$(git log --oneline master..origin/master 2> /dev/null)"
 if [ -n "${force}" ] || [ -n "${changed}" ]; then
     env_changed="$(git log --oneline master..origin/master sreader/requirements.txt 2> /dev/null)"
 
+    # Configuration
+    echo "- Configuring"
+    raspi-config nonint do_i2c 0
+    raspi-config nonint do_serial 0
+
+    # Dependencies
+    echo "- Installing dependencies"
+    until [ -n "${installed}" ]; do
+        apt-get -qq update && \
+        apt-get -qq install curl git jq mosquitto python3 python3-venv python3-smbus python3-pil && \
+        installed=true || true
+        if [ -z "${installed}" ]; then
+            echo "Retrying installation"
+            sleep 1
+        fi
+    done
+    systemctl enable mosquitto
+
+    # Source code
     echo "- Updating source code"
     git reset --hard origin/master > /dev/null
     git submodule update --remote > /dev/null
@@ -68,22 +87,23 @@ if [ -n "${force}" ] || [ -n "${changed}" ]; then
         deactivate
     fi
 
+    # Environment
     echo "- Setting up environment"
-    # Logrotate
+    # - Logrotate
     cp "logrotate.conf" "${LOGROTATE_CFG}"
-    # Exe
+    # - Exe
     echo "#/bin/sh
 \"${LIB_DIR}/env/bin/python3\" \"${SRC_DIR}/sreader/src/loop.py\" \"\$@\"" > "${MAIN_EXE}"
     chmod +x "${MAIN_EXE}"
-    # Service
+    # - Service
     cp "sreader.service" "${SERVICES_DIR}"
     systemctl daemon-reload
     systemctl enable sreader
-    # Cron job
+    # - Cron job
     echo "#/bin/sh
 \"${UPDATER_EXE}\" \"\${SREADER_CFG_URL}\" >> \"${UPDATER_LOG}\" 2>&1" > "${CRON_EXE}"
     chmod +x "${CRON_EXE}"
-    # Updater
+    # - Updater
     cp "${SRC_DIR}/update.sh" "${UPDATER_EXE}"
     chmod +x "${UPDATER_EXE}"
 else
