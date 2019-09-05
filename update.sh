@@ -80,7 +80,7 @@ if [ -n "${force}" ] || [ -n "${changed}" ]; then
 \"${UPDATER_EXE}\" \"\${SREADER_CFG_URL}\" >> \"${UPDATER_LOG}\" 2>&1" > "${CRON_EXE}"
     chmod +x "${CRON_EXE}"
 
-    cp "$0" "${UPDATER_EXE}"
+    cp "${SRC_DIR}/update.sh" "${UPDATER_EXE}"
     chmod +x "${UPDATER_EXE}"
 else
     echo "No updates"
