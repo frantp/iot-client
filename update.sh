@@ -37,7 +37,7 @@ MAIN_EXE="/usr/local/bin/sreader"
 LIB_DIR="/var/lib/sreader"
 LOG_DIR="/var/log/sreader"
 SERVICES_DIR="/etc/systemd/system"
-CRON_EXE="/etc/cron.hourly/sreader"
+CRON_EXE="/etc/cron.hourly/sreader-update"
 UPDATER_EXE="/usr/local/bin/sreader-update"
 UPDATER_LOG="${LOG_DIR}/updater.log"
 LOGROTATE_CFG="/etc/logrotate.d/sreader"
@@ -51,35 +51,39 @@ echo "Checking source code updates"
 git fetch > /dev/null
 changed="$(git log --oneline master..origin/master 2> /dev/null)"
 if [ -n "${force}" ] || [ -n "${changed}" ]; then
+    env_changed="$(git log --oneline master..origin/master sreader/requirements.txt 2> /dev/null)"
+
     echo "- Updating source code"
     git reset --hard origin/master > /dev/null
     git submodule update --remote > /dev/null
 
     mkdir -p \"${LIB_DIR}\" \"${LOG_DIR}\"
 
-    echo "- Installing Python environment"
+    if [ -n "${force}" ] || [ -n "${env_changed}" ]; then
+        echo "- Installing Python environment"
 
-    python3 -m venv "${LIB_DIR}/env"
-    . "${LIB_DIR}/env/bin/activate"
-    pip3 install --no-cache-dir -r "sreader/requirements.txt"
-    deactivate
+        python3 -m venv "${LIB_DIR}/env"
+        . "${LIB_DIR}/env/bin/activate"
+        pip3 install --no-cache-dir -r "sreader/requirements.txt"
+        deactivate
+    fi
 
     echo "- Setting up environment"
-
+    # Logrotate
     cp "logrotate.conf" "${LOGROTATE_CFG}"
-
+    # Exe
     echo "#/bin/sh
 \"${LIB_DIR}/env/bin/python3\" \"${SRC_DIR}/sreader/src/loop.py\" \"\$@\"" > "${MAIN_EXE}"
     chmod +x "${MAIN_EXE}"
-
+    # Service
     cp "sreader.service" "${SERVICES_DIR}"
     systemctl daemon-reload
     systemctl enable sreader
-
+    # Cron job
     echo "#/bin/sh
 \"${UPDATER_EXE}\" \"\${SREADER_CFG_URL}\" >> \"${UPDATER_LOG}\" 2>&1" > "${CRON_EXE}"
     chmod +x "${CRON_EXE}"
-
+    # Updater
     cp "${SRC_DIR}/update.sh" "${UPDATER_EXE}"
     chmod +x "${UPDATER_EXE}"
 else
