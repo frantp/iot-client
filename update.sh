@@ -92,6 +92,7 @@ download_github_file "${cfg_url}/mosquitto.conf" "/etc/mosquitto/mosquitto.conf"
 download_github_file "${cfg_url}/sreader.conf" "/etc/sreader.conf"
 
 # Restarting services
+echo "Restarting services"
 systemctl restart mosquitto sreader
 
 echo "Finished"
