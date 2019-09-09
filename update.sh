@@ -64,16 +64,20 @@ if [ -n "${force}" ] || [ -n "${changed}" ]; then
     # Dependencies
     echo "- Installing dependencies"
     until [ -n "${installed}" ]; do
+        . "/etc/os-release"
+        curl -sL https://repos.influxdata.com/influxdb.key | sudo apt-key add - && \
+        echo "deb https://repos.influxdata.com/debian ${VERSION_CODENAME} stable" > "/etc/apt/sources.list.d/influxdb.list" && \
         apt-get -qq update && \
-        apt-get -qq install curl git jq mosquitto python3 \
-            python3-venv python3-smbus python3-pil libopenjp2-7 && \
+        apt-get -qq install curl git jq mosquitto telegraf \
+            python3 python3-venv python3-smbus python3-pil libopenjp2-7 && \
         installed=true || true
         if [ -z "${installed}" ]; then
             echo "Retrying installation"
             sleep 1
         fi
     done
-    systemctl enable mosquitto > /dev/null
+    usermod -aG dialout,spi,i2c,gpio telegraf
+    systemctl enable mosquitto telegraf > /dev/null
 
     # Source code
     echo "- Updating source code"
@@ -96,12 +100,8 @@ if [ -n "${force}" ] || [ -n "${changed}" ]; then
     cp "logrotate.conf" "${LOGROTATE_CFG}"
     # - Exe
     echo "#!/bin/sh
-\"${LIB_DIR}/env/bin/python3\" -u \"${SRC_DIR}/sreader/src/loop.py\" \"\$@\"" > "${MAIN_EXE}"
+\"${LIB_DIR}/env/bin/python3\" -u \"${SRC_DIR}/sreader/src/run.py\" \"\$@\"" > "${MAIN_EXE}"
     chmod +x "${MAIN_EXE}"
-    # - Service
-    cp "sreader.service" "${SERVICES_DIR}"
-    systemctl daemon-reload > /dev/null
-    systemctl enable sreader > /dev/null
     # - Cron job
     echo "#!/bin/sh
 echo \"\$(date -Ins)\" >> \"${UPDATER_LOG}\"
@@ -117,10 +117,12 @@ fi
 # Config
 echo "Updating configuration files"
 download_github_file "${cfg_url}/mosquitto.conf" "/etc/mosquitto/conf.d/sreader.conf"
+#download_github_file "${cfg_url}/telegraf.conf" "/etc/telegraf/conf.d/sreader.conf"
+download_github_file "${cfg_url}/telegraf.conf" "/etc/telegraf/telegraf.conf"
 download_github_file "${cfg_url}/sreader.conf" "/etc/sreader.conf"
 
 # Restarting services
 echo "Restarting services"
-systemctl restart mosquitto sreader > /dev/null
+systemctl restart mosquitto telegraf > /dev/null
 
 echo "Finished"
