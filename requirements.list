@@ -1,0 +1,10 @@
+curl
+git
+jq
+mosquitto
+telegraf
+python3
+python3-venv
+python3-smbus
+python3-pil
+libopenjp2-7
