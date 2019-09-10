@@ -105,7 +105,7 @@ if [ -n "${force}" ] || [ -n "${changed}" ]; then
     # - Cron job
     echo "#!/bin/sh
 echo \"\$(date -Ins)\" >> \"${UPDATER_LOG}\"
-\"${UPDATER_EXE}\" \"\${SREADER_CFG_URL}\" >> \"${UPDATER_LOG}\" 2>&1" > "${CRON_EXE}"
+\"${UPDATER_EXE}\" >> \"${UPDATER_LOG}\" 2>&1" > "${CRON_EXE}"
     chmod +x "${CRON_EXE}"
     # - Updater
     cp "${SRC_DIR}/update.sh" "${UPDATER_EXE}"
