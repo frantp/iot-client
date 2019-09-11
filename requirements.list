@@ -1,5 +1,3 @@
-curl
-git
 jq
 mosquitto
 mosquitto-clients
