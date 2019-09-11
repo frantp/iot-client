@@ -77,13 +77,17 @@ if [ ! -e "${init_path}" ]; then
         echo "Downloading image"
         wget "https://downloads.raspberrypi.org/raspbian_lite_latest" -O "${init_path}.zip" || \
             die "Failed"
+        downloaded=true
     fi
 
     echo "Extracting image"
     apt-get -qq install unzip && \
-    unzip -p "${init_path}.zip" > "${init_path}" && \
-    rm "${init_path}.zip" || \
+    unzip -p "${init_path}.zip" > "${init_path}" || \
         die "Failed"
+
+    if [ -n "${downloaded}" ]; then
+        rm "${init_path}.zip"
+    fi
 fi
 
 # Mount if necessary
