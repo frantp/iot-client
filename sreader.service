@@ -1,0 +1,11 @@
+[Unit]
+Description=Sensor Reader
+After=mosquitto.service
+Wants=mosquitto.service
+
+[Service]
+ExecStart=/usr/local/bin/sreader-mqtt /etc/sreader.conf
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

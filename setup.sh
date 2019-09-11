@@ -36,8 +36,10 @@ shift $(( OPTIND - 1 ))
 
 SRC_DIR="$(realpath "$(dirname "$0")")"
 MAIN_EXE="/usr/local/bin/sreader"
+MQTT_EXE="/usr/local/bin/sreader-mqtt"
 LIB_DIR="/var/lib/sreader"
 LOG_DIR="/var/log/sreader"
+SERVICES_DIR="/etc/systemd/system"
 TMP_DIR="/run/sreader"
 CRON_EXE="/etc/cron.hourly/sreader-update"
 UPDATER_EXE="/usr/local/bin/sreader-update"
@@ -71,8 +73,6 @@ fi
 echo "Configuring"
 raspi-config nonint do_i2c 0
 raspi-config nonint do_serial 2
-usermod -aG dialout,spi,i2c,gpio telegraf
-systemctl enable mosquitto telegraf
 
 # Python requirements
 if [ -z "${omit_python_reqs}" ]; then
@@ -84,13 +84,17 @@ if [ -z "${omit_python_reqs}" ]; then
 fi
 
 # Files
-echo "Setting up environment"
+echo "Installing files"
 # - Logrotate
 cp "logrotate.conf" "${LOGROTATE_CFG}"
-# - Exe
+# - Exes
 echo "#!/bin/sh
 \"${LIB_DIR}/env/bin/python3\" -u \"${SRC_DIR}/sreader/src/run.py\" \"\$@\"" > "${MAIN_EXE}"
 chmod +x "${MAIN_EXE}"
+cp "${SRC_DIR}/sreader-mqtt.sh" "${MQTT_EXE}"
+chmod +x "${MQTT_EXE}"
+# - Services
+cp "${SRC_DIR}/sreader.service" "${SERVICES_DIR}"
 # - Cron job
 echo "#!/bin/sh
 \"${UPDATER_EXE}\" >> \"${UPDATER_LOG}\" 2>&1" > "${CRON_EXE}"
@@ -102,19 +106,27 @@ chmod +x "${UPDATER_EXE}"
 # Configuration files
 echo "Updating configuration files"
 download_github_file "${cfg_url}/mosquitto.conf" "${TMP_DIR}/mosquitto.conf"
-changed="$(diff "${TMP_DIR}/mosquitto.conf" "/etc/mosquitto/conf.d/sreader.conf")"
-if [ -n "${changed}" ]; then
+if ! diff -q "${TMP_DIR}/mosquitto.conf" "/etc/mosquitto/conf.d/sreader.conf" > /dev/null; then
     echo "Restarting moqsuitto"
     mv "${TMP_DIR}/mosquitto.conf" "/etc/mosquitto/conf.d/sreader.conf"
     systemctl restart mosquitto
 fi
 download_github_file "${cfg_url}/telegraf.conf" "${TMP_DIR}/telegraf.conf"
-changed="$(diff "${TMP_DIR}/telegraf.conf" "/etc/telegraf/telegraf.conf")"
-if [ -n "${changed}" ]; then
+if ! diff -q "${TMP_DIR}/telegraf.conf" "/etc/telegraf/telegraf.conf" > /dev/null; then
     echo "Restarting telegraf"
-    mv "${TMP_DIR}/telegraf.conf" "/etc/mosquitto/telegraf.conf"
+    mv "${TMP_DIR}/telegraf.conf" "/etc/telegraf/telegraf.conf"
     systemctl restart telegraf
 fi
 download_github_file "${cfg_url}/sreader.conf" "/etc/sreader.conf"
+
+# Services
+echo "Setting up services"
+systemctl daemon-reload
+systemctl is-enabled mosquitto > /dev/null || systemctl enable mosquitto
+systemctl is-enabled telegraf  > /dev/null || systemctl enable telegraf
+systemctl is-enabled sreader   > /dev/null || systemctl enable sreader
+systemctl is-active  mosquitto > /dev/null || systemctl restart mosquitto
+systemctl is-active  telegraf  > /dev/null || systemctl restart telegraf
+systemctl restart sreader
 
 echo "Finished"
