@@ -8,6 +8,6 @@ sreader "$@" | while IFS= read -r line; do
     b="${frags[@]:1}"
     IFS=',' read -ra tags <<< "${a}"
     id="${tags[0]}"
-    msg="${a},host=${host} ${b}"
+    msg="data,host=${host},sid=${a} ${b}"
     mosquitto_pub -q 2 -i "sreader" -t "data/${host}/${id}" -m "${msg}"
 done
