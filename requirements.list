@@ -1,6 +1,5 @@
 jq
 mosquitto
-mosquitto-clients
 telegraf
 python3
 python3-venv

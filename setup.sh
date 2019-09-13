@@ -36,7 +36,6 @@ shift $(( OPTIND - 1 ))
 
 SRC_DIR="$(realpath "$(dirname "$0")")"
 MAIN_EXE="/usr/local/bin/sreader"
-MQTT_EXE="/usr/local/bin/sreader-mqtt"
 LIB_DIR="/var/lib/sreader"
 LOG_DIR="/var/log/sreader"
 SERVICES_DIR="/etc/systemd/system"
@@ -87,12 +86,10 @@ fi
 echo "Installing files"
 # - Logrotate
 cp "logrotate.conf" "${LOGROTATE_CFG}"
-# - Exes
+# - Exe
 echo "#!/bin/sh
 \"${LIB_DIR}/env/bin/python3\" -u \"${SRC_DIR}/sreader/src/run.py\" \"\$@\"" > "${MAIN_EXE}"
 chmod +x "${MAIN_EXE}"
-cp "${SRC_DIR}/sreader-mqtt.sh" "${MQTT_EXE}"
-chmod +x "${MQTT_EXE}"
 # - Services
 cp "${SRC_DIR}/sreader.service" "${SERVICES_DIR}"
 # - Cron job
@@ -107,7 +104,7 @@ chmod +x "${UPDATER_EXE}"
 echo "Updating configuration files"
 download_github_file "${cfg_url}/mosquitto.conf" "${TMP_DIR}/mosquitto.conf"
 if ! diff -q "${TMP_DIR}/mosquitto.conf" "/etc/mosquitto/conf.d/sreader.conf" > /dev/null; then
-    echo "Restarting moqsuitto"
+    echo "Restarting mosquitto"
     mv "${TMP_DIR}/mosquitto.conf" "/etc/mosquitto/conf.d/sreader.conf"
     systemctl restart mosquitto
 fi
