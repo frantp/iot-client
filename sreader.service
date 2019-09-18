@@ -4,7 +4,7 @@ After=mosquitto.service
 Wants=mosquitto.service
 
 [Service]
-ExecStart=/usr/local/bin/sreader /etc/sreader.conf
+ExecStart=/bin/sh -c '/usr/local/bin/sreader /etc/sreader.conf >> /var/log/sreader/sreader.log 2>&1'
 Restart=on-failure
 
 [Install]
