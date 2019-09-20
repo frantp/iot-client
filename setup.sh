@@ -34,11 +34,11 @@ while getopts "hsp" arg; do
 done
 shift $(( OPTIND - 1 ))
 
-SRC_DIR="$(realpath "$(dirname "$0")")"
+SRC_DIR="/opt/iot-client"
 MAIN_EXE="/usr/local/bin/sreader"
 LIB_DIR="/var/lib/sreader"
 LOG_DIR="/var/log/sreader"
-SERVICES_DIR="/etc/systemd/system"
+SERVICE="/etc/systemd/system/sreader.service"
 TMP_DIR="/run/sreader"
 CRON_EXE="/etc/cron.hourly/sreader-update"
 UPDATER_EXE="/usr/local/bin/sreader-update"
@@ -87,11 +87,17 @@ echo "Installing files"
 # - Logrotate
 cp "logrotate.conf" "${LOGROTATE_CFG}"
 # - Exe
-echo "#!/bin/sh
-\"${LIB_DIR}/env/bin/python3\" -u \"${SRC_DIR}/sreader/src/run.py\" \"\$@\"" > "${MAIN_EXE}"
+if ! diff -q "${SRC_DIR}/sreader.sh" "${MAIN_EXE}" > /dev/null; then
+    cp "${SRC_DIR}/sreader.sh" "${MAIN_EXE}"
+    sreader_changed=true
+fi
 chmod +x "${MAIN_EXE}"
 # - Services
-cp "${SRC_DIR}/sreader.service" "${SERVICES_DIR}"
+if ! diff -q "${SRC_DIR}/sreader.service" "${SERVICE}" > /dev/null; then
+    cp "${SRC_DIR}/sreader.service" "${SERVICE}"
+    systemctl daemon-reload
+    sreader_changed=true
+fi
 # - Cron job
 echo "#!/bin/sh
 \"${UPDATER_EXE}\" >> \"${UPDATER_LOG}\" 2>&1" > "${CRON_EXE}"
@@ -114,16 +120,23 @@ if ! diff -q "${TMP_DIR}/telegraf.conf" "/etc/telegraf/telegraf.conf" > /dev/nul
     mv "${TMP_DIR}/telegraf.conf" "/etc/telegraf/telegraf.conf"
     systemctl restart telegraf
 fi
-download_github_file "${cfg_url}/sreader.conf" "/etc/sreader.conf"
+download_github_file "${cfg_url}/sreader.conf" "${TMP_DIR}/sreader.conf"
+if ! diff -q "${TMP_DIR}/sreader.conf" "/etc/sreader.conf" > /dev/null; then
+    mv "${TMP_DIR}/sreader.conf" "/etc/sreader.conf"
+    sreader_changed=true
+fi
 
 # Services
 echo "Setting up services"
-systemctl daemon-reload
+if [ -n "${sreader_changed}" ]; then
+    echo "Restarting sreader"
+    systemctl restart sreader
+fi
 systemctl is-enabled mosquitto > /dev/null || systemctl enable mosquitto
 systemctl is-enabled telegraf  > /dev/null || systemctl enable telegraf
 systemctl is-enabled sreader   > /dev/null || systemctl enable sreader
 systemctl is-active  mosquitto > /dev/null || systemctl restart mosquitto
 systemctl is-active  telegraf  > /dev/null || systemctl restart telegraf
-systemctl restart sreader
+systemctl is-active  sreader   > /dev/null || systemctl restart sreader
 
 echo "Finished"
