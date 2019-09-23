@@ -47,7 +47,7 @@ LOGROTATE_CFG="/etc/logrotate.d/sreader"
 
 cfg_url="${1:-${SREADER_CFG_URL}}"
 
-cd "${SRC_DIR}" %%%%%%%
+cd "${SRC_DIR}"
 
 mkdir -p "${LIB_DIR}" "${LOG_DIR}" "${TMP_DIR}"
 
@@ -59,6 +59,7 @@ if [ -z "${omit_system_reqs}" ]; then
         curl -sL "https://repos.influxdata.com/influxdb.key" | sudo apt-key add - && \
         echo "deb https://repos.influxdata.com/debian ${VERSION_CODENAME} stable" > "/etc/apt/sources.list.d/influxdb.list" && \
         apt-get -qq update && \
+        DEBIAN_FRONTEND=noninteractive \
         apt-get -qq install $(cat requirements.list | tr '\n' ' ') && \
         installed=true || true
         if [ -z "${installed}" ]; then
