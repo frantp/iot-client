@@ -1,0 +1,11 @@
+[Unit]
+Description=Run updater at startup and also periodically
+After=network-online.target
+Wants=network-online.target
+
+[Timer]
+OnBootSec=0
+OnCalendar=hourly
+
+[Install]
+WantedBy=timers.target

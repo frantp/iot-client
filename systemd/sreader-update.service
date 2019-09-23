@@ -1,0 +1,11 @@
+[Unit]
+Description=Update Sensor Reader
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c '/usr/local/bin/sreader-update >> /var/log/sreader/updater.log 2>&1'
+
+[Install]
+WantedBy=multi-user.target

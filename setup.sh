@@ -35,14 +35,12 @@ done
 shift $(( OPTIND - 1 ))
 
 SRC_DIR="/opt/iot-client"
-MAIN_EXE="/usr/local/bin/sreader"
 LIB_DIR="/var/lib/sreader"
 LOG_DIR="/var/log/sreader"
-SERVICE="/etc/systemd/system/sreader.service"
+SERVICES_DIR="/etc/systemd/system"
 TMP_DIR="/run/sreader"
-CRON_EXE="/etc/cron.hourly/sreader-update"
+MAIN_EXE="/usr/local/bin/sreader"
 UPDATER_EXE="/usr/local/bin/sreader-update"
-UPDATER_LOG="${LOG_DIR}/updater.log"
 LOGROTATE_CFG="/etc/logrotate.d/sreader"
 
 cfg_url="${1:-${SREADER_CFG_URL}}"
@@ -85,8 +83,6 @@ fi
 
 # Files
 echo "Installing files"
-# - Logrotate
-cp "logrotate.conf" "${LOGROTATE_CFG}"
 # - Exe
 if ! diff -q "${SRC_DIR}/sreader.sh" "${MAIN_EXE}" > /dev/null; then
     cp "${SRC_DIR}/sreader.sh" "${MAIN_EXE}"
@@ -94,15 +90,25 @@ if ! diff -q "${SRC_DIR}/sreader.sh" "${MAIN_EXE}" > /dev/null; then
 fi
 chmod +x "${MAIN_EXE}"
 # - Services
-if ! diff -q "${SRC_DIR}/sreader.service" "${SERVICE}" > /dev/null; then
-    cp "${SRC_DIR}/sreader.service" "${SERVICE}"
-    systemctl daemon-reload
+unit="sreader.service"
+if ! diff -q "${SRC_DIR}/systemd/${unit}" "${SERVICES_DIR}/${unit}" > /dev/null; then
+    cp "${SRC_DIR}/systemd/${unit}" "${SERVICES_DIR}/${unit}"
+    reload_services=true
     sreader_changed=true
 fi
-# - Cron job
-echo "#!/bin/sh
-\"${UPDATER_EXE}\" >> \"${UPDATER_LOG}\" 2>&1" > "${CRON_EXE}"
-chmod +x "${CRON_EXE}"
+unit="sreader-update.service"
+if ! diff -q "${SRC_DIR}/systemd/${unit}" "${SERVICES_DIR}/${unit}" > /dev/null; then
+    cp "${SRC_DIR}/systemd/${unit}" "${SERVICES_DIR}/${unit}"
+    reload_services=true
+fi
+unit="sreader-update.timer"
+if ! diff -q "${SRC_DIR}/systemd/${unit}" "${SERVICES_DIR}/${unit}" > /dev/null; then
+    cp "${SRC_DIR}/systemd/${unit}" "${SERVICES_DIR}/${unit}"
+    reload_services=true
+    systemctl restart "${unit}"
+fi
+# - Logrotate
+cp "logrotate.conf" "${LOGROTATE_CFG}"
 # - Updater
 cp "${SRC_DIR}/update.sh" "${UPDATER_EXE}"
 chmod +x "${UPDATER_EXE}"
@@ -129,15 +135,21 @@ fi
 
 # Services
 echo "Setting up services"
+if [ -n "${reload_services}" ]; then
+    echo "Reloading services"
+    systemctl daemon-reload
+fi
 if [ -n "${sreader_changed}" ]; then
     echo "Restarting sreader"
     systemctl restart sreader
 fi
-systemctl is-enabled mosquitto > /dev/null || systemctl enable mosquitto
-systemctl is-enabled telegraf  > /dev/null || systemctl enable telegraf
-systemctl is-enabled sreader   > /dev/null || systemctl enable sreader
-systemctl is-active  mosquitto > /dev/null || systemctl restart mosquitto
-systemctl is-active  telegraf  > /dev/null || systemctl restart telegraf
-systemctl is-active  sreader   > /dev/null || systemctl restart sreader
+systemctl is-enabled mosquitto            > /dev/null || systemctl enable mosquitto
+systemctl is-enabled telegraf             > /dev/null || systemctl enable telegraf
+systemctl is-enabled sreader              > /dev/null || systemctl enable sreader
+systemctl is-enabled sreader-update.timer > /dev/null || systemctl enable sreader-update.timer
+systemctl is-active  mosquitto            > /dev/null || systemctl restart mosquitto
+systemctl is-active  telegraf             > /dev/null || systemctl restart telegraf
+systemctl is-active  sreader              > /dev/null || systemctl restart sreader
+systemctl is-active  sreader-update.timer > /dev/null || systemctl restart sreader-update.timer
 
 echo "Finished"
