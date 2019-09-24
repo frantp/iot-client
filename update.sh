@@ -57,4 +57,6 @@ if [ -z "${preqs_changed}" ]; then
     args="${args} -p"
 fi
 
-"./setup.sh" ${args} "${cfg_url}"
+"./setup.sh" ${args} "${cfg_url}" && status=0 || status=1
+
+HOME="/root" mosquitto_pub -q 2 -i "sreader-update" -t "state/$(hostname)/update" -m "update status=${status} $(date +%s%N)"
