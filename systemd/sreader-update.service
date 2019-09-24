@@ -5,6 +5,7 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
+EnvironmentFile=/etc/environment
 ExecStart=/bin/sh -c '/usr/local/bin/sreader-update >> /var/log/sreader/updater.log 2>&1'
 
 [Install]
