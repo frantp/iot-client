@@ -11,14 +11,12 @@ usage() {
     echo ""
     echo "Options:"
     echo "  -h  Show this help message"
-    echo "  -f  Force update"
 }
 
 # Parse arguments
-while getopts "hf" arg; do
+while getopts "h" arg; do
     case "${arg}" in
         h) usage; exit 0 ;;
-        f) force=true ;;
     esac
 done
 shift $(( OPTIND - 1 ))
@@ -42,12 +40,14 @@ if [ -n "${scode_changed}" ]; then
     echo "Updating source code"
     git reset --hard origin/master > /dev/null
     git submodule update --remote > /dev/null
-else
-    echo "Source code up to date"
 fi
 
 # Config
 args=""
+if [ -z "${scode_changed}" ]; then
+    echo "Source code up to date"
+    args="${args} -r"
+fi
 if [ -z "${sreqs_changed}" ]; then
     echo "System requirements up to date"
     args="${args} -s"

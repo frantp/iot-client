@@ -25,9 +25,10 @@ download_github_file() {
 }
 
 # Parse arguments
-while getopts "hsp" arg; do
+while getopts "hrsp" arg; do
     case "${arg}" in
         h) usage; exit 0 ;;
+        r) omit_service_restart=true ;;
         s) omit_system_reqs=true ;;
         p) omit_python_reqs=true ;;
     esac
@@ -49,12 +50,16 @@ cd "${SRC_DIR}"
 
 mkdir -p "${LIB_DIR}" "${LOG_DIR}" "${TMP_DIR}"
 
+if [ -z "${omit_service_restart}" ]; then
+    restart_sreader=true
+fi
+
 # System requirements
 if [ -z "${omit_system_reqs}" ]; then
     echo "Installing system requirements"
     until [ -n "${installed}" ]; do
         . "/etc/os-release"
-        curl -sL "https://repos.influxdata.com/influxdb.key" | sudo apt-key add - && \
+        curl -sL "https://repos.influxdata.com/influxdb.key" | sudo apt-key add - > /dev/null && \
         echo "deb https://repos.influxdata.com/debian ${VERSION_CODENAME} stable" > "/etc/apt/sources.list.d/influxdb.list" && \
         apt-get -qq update && \
         DEBIAN_FRONTEND=noninteractive \
@@ -86,7 +91,7 @@ echo "Installing files"
 # - Exe
 if ! diff -q "${SRC_DIR}/sreader.sh" "${MAIN_EXE}" > /dev/null; then
     cp "${SRC_DIR}/sreader.sh" "${MAIN_EXE}"
-    sreader_changed=true
+    restart_sreader=true
 fi
 chmod +x "${MAIN_EXE}"
 # - Services
@@ -94,7 +99,7 @@ unit="sreader.service"
 if ! diff -q "${SRC_DIR}/systemd/${unit}" "${SERVICES_DIR}/${unit}" > /dev/null; then
     cp "${SRC_DIR}/systemd/${unit}" "${SERVICES_DIR}/${unit}"
     reload_services=true
-    sreader_changed=true
+    restart_sreader=true
 fi
 unit="sreader-update.service"
 if ! diff -q "${SRC_DIR}/systemd/${unit}" "${SERVICES_DIR}/${unit}" > /dev/null; then
@@ -130,7 +135,7 @@ fi
 download_github_file "${cfg_url}/sreader.conf" "${TMP_DIR}/sreader.conf"
 if ! diff -q "${TMP_DIR}/sreader.conf" "/etc/sreader.conf" > /dev/null; then
     mv "${TMP_DIR}/sreader.conf" "/etc/sreader.conf"
-    sreader_changed=true
+    restart_sreader=true
 fi
 
 # Services
@@ -139,7 +144,7 @@ if [ -n "${reload_services}" ]; then
     echo "Reloading services"
     systemctl daemon-reload
 fi
-if [ -n "${sreader_changed}" ]; then
+if [ -n "${restart_sreader}" ]; then
     echo "Restarting sreader"
     systemctl restart sreader
 fi
