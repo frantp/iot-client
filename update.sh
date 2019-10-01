@@ -46,7 +46,7 @@ fi
 args=""
 if [ -z "${scode_changed}" ]; then
     echo "Source code up to date"
-    args="${args} -r"
+    args="${args} -o"
 fi
 if [ -z "${sreqs_changed}" ]; then
     echo "System requirements up to date"
