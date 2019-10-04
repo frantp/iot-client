@@ -26,7 +26,7 @@ download_github_file() {
 }
 
 # Parse arguments
-while getopts "hmsp" arg; do
+while getopts "hosp" arg; do
     case "${arg}" in
         h) usage; exit 0 ;;
         o) omit_installation=true ;;
