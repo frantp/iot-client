@@ -7,7 +7,7 @@ usage() {
     echo "Usage: $0 [options] [cfg_url]"
     echo ""
     echo "Arguments:"
-    echo "  cfg_url  URL to search for configuration files (defaults to SREADER_CFG_URL)"
+    echo "  cfg_url  URL to search for configuration files (defaults to PIOT_CFG_URL)"
     echo ""
     echo "Options:"
     echo "  -h  Show this help message"
@@ -21,9 +21,9 @@ while getopts "h" arg; do
 done
 shift $(( OPTIND - 1 ))
 
-SRC_DIR="/opt/iot-client"
+SRC_DIR="/opt/piot-client"
 
-cfg_url="${1:-${SREADER_CFG_URL}}"
+cfg_url="${1:-${PIOT_CFG_URL}}"
 
 cd "${SRC_DIR}"
 
@@ -33,7 +33,7 @@ git fetch > /dev/null
 scode_changed="$(git log --oneline master..origin/master 2> /dev/null)"
 if [ -n "${scode_changed}" ]; then
     sreqs_changed="$(git diff origin/master -- "requirements.list" 2> /dev/null)"
-    cd "sreader"
+    cd "piot"
     preqs_changed="$(git diff origin/master -- "requirements.txt" 2> /dev/null)"
     cd ".."
 
@@ -60,5 +60,5 @@ fi
 "./setup.sh" ${args} "${cfg_url}" && status=0 || status=1
 
 host="$(hostname)"
-HOME="/root" mosquitto_pub -q 2 -i "sreader-update" -t "state/${host}/update" \
+HOME="/root" mosquitto_pub -q 2 -i "piot-update" -t "state/${host}/update" \
     -m "update,host=${host} status=${status} $(date +%s%N)"

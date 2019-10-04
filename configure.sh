@@ -29,7 +29,7 @@ usage() {
     echo "  -i <ip>        Set static IP"
     echo "  -e <env_str>   Set environment variable, with the form VAR=VAL (can be"
     echo "                 defined multiple times)"
-    echo "  -x             Install IOT client; SREADER_CFG_URL should be set"
+    echo "  -x             Install Piot client; PIOT_CFG_URL should be set"
 }
 
 release_image() {
@@ -64,7 +64,7 @@ while getopts "hmp:n:srw:c:i:e:x" arg; do
         c) wifi_country="${OPTARG}" ;;
         i) static_ip="${OPTARG}" ;;
         e) env_strs+=("${OPTARG}") ;;
-        x) install_iot_client=true; ;;
+        x) install_piot_client=true; ;;
     esac
 done
 shift $(( OPTIND - 1 ))
@@ -212,14 +212,14 @@ for env_str in "${env_strs[@]}"; do
     sed -i "/^${env_var}=/d" "${out_file}" && echo "${env_str}" >> "${out_file}"
 done
 
-# Install IOT client
-if [ -n "${install_iot_client}" ]; then
-    echo "Installing IOT client"
-    INSTALLER_BIN="/usr/local/bin/sreader-install"
-    INSTALLER_LOG="/var/log/sreader/installer.log"
+# Install Piot client
+if [ -n "${install_piot_client}" ]; then
+    echo "Installing Piot client"
+    INSTALLER_BIN="/usr/local/bin/piot-install"
+    INSTALLER_LOG="/var/log/piot/installer.log"
     ouf_file="${root_dir}/etc/rc.local"
     clean_previous_cfg "${ouf_file}" && \
-    wget "https://raw.githubusercontent.com/frantp/iot-client/master/install.sh" -qO "${root_dir}/${INSTALLER_BIN}" && \
+    wget "https://raw.githubusercontent.com/frantp/piot-client/master/install.sh" -qO "${root_dir}/${INSTALLER_BIN}" && \
     chmod +x "${root_dir}/${INSTALLER_BIN}" && \
     end="$(tail -n 1 "${ouf_file}")" && sed -i '$d' "${ouf_file}" && \
 cfg="${MARKER_STR}
