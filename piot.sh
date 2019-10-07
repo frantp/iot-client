@@ -1,2 +1,2 @@
 #!/bin/sh
-/var/lib/piot/env/bin/python3 -u /opt/piot-client/piot/src/run.py "$@"
+cd "/opt/piot-client/piot" && /var/lib/piot/env/bin/python3 -um piot "$@"
