@@ -57,7 +57,7 @@ if [ -z "${preqs_changed}" ]; then
     args="${args} -p"
 fi
 
-"./setup.sh" ${args} "${cfg_url}" && status=0 || status=1
+"./install.sh" ${args} "${cfg_url}" && status=0 || status=1
 
 host="$(hostname)"
 HOME="/root" mosquitto_pub -q 2 -i "piot-update" -t "state/${host}/update" \

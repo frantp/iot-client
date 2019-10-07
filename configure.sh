@@ -215,18 +215,18 @@ done
 # Install Piot client
 if [ -n "${install_piot_client}" ]; then
     echo "Installing Piot client"
-    INSTALLER_BIN="/usr/local/bin/piot-install"
-    INSTALLER_LOG="/var/log/piot/installer.log"
+    SETUP_BIN="/usr/local/bin/piot-setup"
+    SETUP_LOG="/var/log/piot/setup.log"
     ouf_file="${root_dir}/etc/rc.local"
     clean_previous_cfg "${ouf_file}" && \
-    wget "https://raw.githubusercontent.com/frantp/piot-client/master/install.sh" -qO "${root_dir}/${INSTALLER_BIN}" && \
-    chmod +x "${root_dir}/${INSTALLER_BIN}" && \
+    wget "https://raw.githubusercontent.com/frantp/piot-client/master/setup.sh" -qO "${root_dir}/${SETUP_BIN}" && \
+    chmod +x "${root_dir}/${SETUP_BIN}" && \
     end="$(tail -n 1 "${ouf_file}")" && sed -i '$d' "${ouf_file}" && \
 cfg="${MARKER_STR}
 set -a; . \"/etc/environment\"; set +a
-mkdir -p \"$(dirname "${INSTALLER_LOG}")\"
-\"${INSTALLER_BIN}\" >> \"${INSTALLER_LOG}\" 2>&1 && \\
-rm \"${INSTALLER_BIN}\" && \\
+mkdir -p \"$(dirname "${SETUP_BIN}")\"
+\"${SETUP_BIN}\" >> \"${SETUP_BIN}\" 2>&1 && \\
+rm \"${SETUP_BIN}\" && \\
 sed -i \"/^${MARKER_STR}/,/^${MARKER_END}/d\" \"/etc/rc.local\"
 ${MARKER_END}
 ${end}" && \
