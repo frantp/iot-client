@@ -132,8 +132,8 @@ if [ -n "${restart_piot}" ]; then
     systemctl restart piot-update.timer
 fi
 for unit in "mosquitto" "telegraf" "piot" "piot-update.timer"; do
-    systemctl is-enabled "${unit}" > /dev/null || { echo "- Enabling ${unit}" && systemctl enable "${unit}"; }
-    systemctl is-active  "${unit}" > /dev/null || { echo "- Starting ${unit}" && systemctl restart "${unit}"; }
+    systemctl is-enabled "${unit}" > /dev/null || { echo "- Enabling ${unit}" && systemctl enable "${unit}" > /dev/null; }
+    systemctl is-active  "${unit}" > /dev/null || { echo "- Starting ${unit}" && systemctl restart "${unit}" > /dev/null; }
 done
 
 echo "Finished"
