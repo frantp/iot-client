@@ -37,9 +37,9 @@ done
 shift $(( OPTIND - 1 ))
 
 SRC_DIR="/opt/piot-client"
+SRV_DIR="/etc/systemd/system"
 LIB_DIR="/var/lib/piot"
 LOG_DIR="/var/log/piot"
-SERVICES_DIR="/etc/systemd/system"
 TMP_DIR="/run/piot"
 MAIN_EXE="/usr/local/bin/piot"
 UPDATER_EXE="/usr/local/bin/piot-update"
@@ -47,11 +47,11 @@ LOGROTATE_CFG="/etc/logrotate.d/piot"
 
 cfg_url="${1:-${PIOT_CFG_URL}}"
 
+mkdir -p "${LIB_DIR}" "${LOG_DIR}" "${TMP_DIR}"
+
 cd "${SRC_DIR}"
 
 if [ -z "${omit_installation}" ]; then
-    mkdir -p "${LIB_DIR}" "${LOG_DIR}" "${TMP_DIR}"
-
     # System requirements
     if [ -z "${omit_system_reqs}" ]; then
         echo "Installing system requirements"
@@ -89,7 +89,7 @@ if [ -z "${omit_installation}" ]; then
     chmod +x *.sh
     ln -sf "${SRC_DIR}/piot.sh" "${MAIN_EXE}"  # Main exe
     for unit in "piot.service" "piot-update.service" "piot-update.timer"; do
-        ln -sf "${SRC_DIR}/systemd/${unit}" "${SERVICES_DIR}/${unit}"  # Services
+        ln -sf "${SRC_DIR}/systemd/${unit}" "${SRV_DIR}/${unit}"  # Services
     done
     systemctl daemon-reload
     ln -sf "${SRC_DIR}/logrotate.conf" "${LOGROTATE_CFG}"  # Logrotate
