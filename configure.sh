@@ -225,7 +225,7 @@ if [ -n "${install_piot_client}" ]; then
 cfg="${MARKER_STR}
 set -a; . \"/etc/environment\"; set +a
 mkdir -p \"$(dirname "${SETUP_BIN}")\"
-\"${SETUP_BIN}\" >> \"${SETUP_BIN}\" 2>&1 && \\
+\"${SETUP_BIN}\" >> \"${SETUP_LOG}\" 2>&1 && \\
 rm \"${SETUP_BIN}\" && \\
 sed -i \"/^${MARKER_STR}/,/^${MARKER_END}/d\" \"/etc/rc.local\"
 ${MARKER_END}
