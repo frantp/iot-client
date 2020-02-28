@@ -4,7 +4,7 @@ After=mosquitto.service
 Wants=mosquitto.service
 
 [Service]
-ExecStart=/bin/sh -c '/usr/local/bin/piot /etc/piot.conf >> /var/log/piot/piot.log 2>&1'
+ExecStart=/bin/sh -c '/usr/local/bin/piot /etc/piot.conf >> /var/log/piot/piot.data 2>> /var/log/piot/piot.log'
 Restart=on-failure
 
 [Install]
