@@ -45,7 +45,8 @@ MAIN_EXE="/usr/local/bin/piot"
 UPDATER_EXE="/usr/local/bin/piot-update"
 LOGROTATE_CFG="/etc/logrotate.d/piot"
 
-cfg_url="${1:-${PIOT_CFG_URL}}"
+cfg_url="${1:-${PIOT_CONFIG_URL}}"
+cfg_url="${cfg_url?"URL not provided"}"
 
 mkdir -p "${LIB_DIR}" "${LOG_DIR}" "${TMP_DIR}"
 
@@ -57,7 +58,7 @@ if [ -z "${omit_installation}" ]; then
         echo "Installing system requirements"
         until [ -n "${installed}" ]; do
             . "/etc/os-release"
-            curl -sL "https://repos.influxdata.com/influxdb.key" | sudo apt-key add - > /dev/null && \
+            curl -sL "https://repos.influxdata.com/influxdb.key" | apt-key add - > /dev/null && \
             echo "deb https://repos.influxdata.com/debian ${VERSION_CODENAME} stable" > "/etc/apt/sources.list.d/influxdb.list" && \
             apt-get -qq update && \
             DEBIAN_FRONTEND=noninteractive \
