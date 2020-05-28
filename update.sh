@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 
 die() { [ "$#" -eq 0 ] || echo "$*" >&2; exit 1; }
 
@@ -38,76 +38,87 @@ CFG_URL="${CFG_URL?"Configuration URL not provided"}"
 
 cd "${SRC_DIR}"
 
-# Source code
+# Installation
+
 echo "[$(date -Ins)] Checking source code updates"
 git fetch > /dev/null
 code_changed="$(git log --oneline master..origin/master 2> /dev/null)"
-if [ -n "${code_changed}" ]; then
-	deps_changed="$(git diff origin/master -- "dependencies.txt" 2> /dev/null)"
-	cd "piot"
-	reqs_changed="$(git diff origin/master -- "requirements.txt" 2> /dev/null)"
-	cd ".."
-
-	echo "Updating source code"
-	git reset --hard origin/master > /dev/null
-	git submodule update --remote > /dev/null
-fi
-
-# Install
 status=0
 if [ -z "${code_changed}" ]; then
 	echo "Source code up to date"
 else
 	args=""
+
+	deps_changed="$(git diff origin/master -- "dependencies.txt" 2> /dev/null)"
 	if [ -z "${deps_changed}" ]; then
 		echo "System dependencies up to date"
 		args="${args} -s"
 	fi
+
+	cd "piot"
+	reqs_changed="$(git diff origin/master -- "requirements.txt" 2> /dev/null)"
 	if [ -z "${reqs_changed}" ]; then
 		echo "Python requirements up to date"
 		args="${args} -p"
 	fi
+	cd ".."
+
+	echo "Updating source code"
+	git reset --hard origin/master > /dev/null
+	git submodule update --remote > /dev/null
+
+	echo "Reinstalling"
 	"./install.sh" ${args} "${CFG_URL}" && status=0 || status=1
 fi
 host="$(hostname)"
 HOME="/root" mosquitto_pub -q 2 -i "piot-update" -t "meta/${host}/update" \
-	-m "update,host=${host} status=${status} $(date +%s%N)"
+	-m "update,host=${host} status=${status} $(date +%s%N)" 2> /dev/null
 
 # Configuration files
+
 echo "Updating configuration files"
 download_github_file "${CFG_URL}/mosquitto.conf" "${TMP_DIR}/mosquitto.conf"
-if ! diff -q "${TMP_DIR}/mosquitto.conf" "/etc/mosquitto/conf.d/piot.conf" > /dev/null; then
+file="/etc/mosquitto/conf.d/piot.conf"
+if [ ! -e "${file}" ] || ! diff -q "${TMP_DIR}/mosquitto.conf" "${file}" > /dev/null; then
 	mv "${TMP_DIR}/mosquitto.conf" "/etc/mosquitto/conf.d/piot.conf"
 	restart_mosquitto=true
 fi
 download_github_file "${CFG_URL}/telegraf.conf" "${TMP_DIR}/telegraf.conf"
-if ! diff -q "${TMP_DIR}/telegraf.conf" "/etc/telegraf/telegraf.conf" > /dev/null; then
+file="/etc/telegraf/telegraf.conf"
+if [ ! -e "${file}" ] || ! diff -q "${TMP_DIR}/telegraf.conf" "${file}" > /dev/null; then
 	mv "${TMP_DIR}/telegraf.conf" "/etc/telegraf/telegraf.conf"
 	restart_telegraf=true
 fi
 download_github_file "${CFG_URL}/piot.conf" "${TMP_DIR}/piot.conf"
-if ! diff -q "${TMP_DIR}/piot.conf" "/etc/piot.conf" > /dev/null; then
+file="/etc/piot.conf"
+if [ ! -e "${file}" ] || ! diff -q "${TMP_DIR}/piot.conf" "${file}" > /dev/null; then
 	mv "${TMP_DIR}/piot.conf" "/etc/piot.conf"
 	restart_piot=true
 fi
 
 # Services
+
 echo "Setting up services"
 if [ -n "${restart_mosquitto}" ]; then
 	echo "- Restarting mosquitto"
-	systemctl restart mosquitto
+	pidof systemd && systemctl -q restart mosquitto
 fi
 if [ -n "${restart_telegraf}" ]; then
 	echo "- Restarting telegraf"
-	systemctl restart telegraf
+	pidof systemd && systemctl -q restart telegraf
 fi
 if [ -n "${restart_piot}" ]; then
 	echo "- Restarting piot and piot-update.timer"
-	systemctl restart piot
-	systemctl restart piot-update.timer
+	pidof systemd && systemctl -q restart piot piot-update.timer
 fi
 for unit in mosquitto telegraf piot piot-update.timer; do
-	systemctl is-enabled "${unit}" > /dev/null || { echo "- Enabling ${unit}" && systemctl enable  "${unit}" > /dev/null; }
-	systemctl is-active  "${unit}" > /dev/null || { echo "- Starting ${unit}" && systemctl restart "${unit}" > /dev/null; }
+	if systemctl -q is-enabled "${unit}"; then
+		echo "- Enabling ${unit}"
+		systemctl -q enable  "${unit}"
+	fi
+	if pidof systemd && systemctl -q is-active  "${unit}"; then
+		echo "- Starting ${unit}"
+		systemctl -q restart "${unit}"
+	fi
 done
-systemctl daemon-reload
+systemctl daemon-reload 2> /dev/null

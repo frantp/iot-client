@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh
 
 die() { [ "$#" -eq 0 ] || echo "$*" >&2; exit 1; }
 
