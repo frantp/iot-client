@@ -47,6 +47,7 @@ if [ -z "${omit_system_reqs}" ]; then
     apt-get -qq update
     DEBIAN_FRONTEND=noninteractive \
         apt-get -qq install $(cat dependencies.txt | tr '\n' ' ')
+	rabbitmq-plugins enable rabbitmq_shovel
 fi
 
 # Python requirements

@@ -70,38 +70,35 @@ else
 	echo "Reinstalling"
 	"./install.sh" ${args} "${CFG_URL}" && status=0 || status=1
 fi
-host="$(hostname)"
-HOME="/root" mosquitto_pub -q 2 -i "piot-update" -t "meta/${host}/update" \
-	-m "update,host=${host} status=${status} $(date +%s%N)" 2> /dev/null
 
 # Configuration files
 
 echo "Updating configuration files"
-download_github_file "${CFG_URL}/mosquitto.conf" "${TMP_DIR}/mosquitto.conf"
-file="/etc/mosquitto/conf.d/piot.conf"
-if [ ! -e "${file}" ] || ! diff -q "${TMP_DIR}/mosquitto.conf" "${file}" > /dev/null; then
-	mv "${TMP_DIR}/mosquitto.conf" "/etc/mosquitto/conf.d/piot.conf"
-	restart_mosquitto=true
+download_github_file "${CFG_URL}/advanced.config" "${TMP_DIR}/advanced.config"
+file="/etc/rabbitmq/advanced.config"
+if [ ! -e "${file}" ] || ! diff -q "${TMP_DIR}/advanced.config" "${file}" > /dev/null; then
+	mv "${TMP_DIR}/advanced.config" "${file}"
+	restart_rabbitmq=true
 fi
 download_github_file "${CFG_URL}/telegraf.conf" "${TMP_DIR}/telegraf.conf"
 file="/etc/telegraf/telegraf.conf"
 if [ ! -e "${file}" ] || ! diff -q "${TMP_DIR}/telegraf.conf" "${file}" > /dev/null; then
-	mv "${TMP_DIR}/telegraf.conf" "/etc/telegraf/telegraf.conf"
+	mv "${TMP_DIR}/telegraf.conf" "${file}"
 	restart_telegraf=true
 fi
 download_github_file "${CFG_URL}/piot.conf" "${TMP_DIR}/piot.conf"
 file="/etc/piot.conf"
 if [ ! -e "${file}" ] || ! diff -q "${TMP_DIR}/piot.conf" "${file}" > /dev/null; then
-	mv "${TMP_DIR}/piot.conf" "/etc/piot.conf"
+	mv "${TMP_DIR}/piot.conf" "${file}"
 	restart_piot=true
 fi
 
 # Services
 
 echo "Setting up services"
-if [ -n "${restart_mosquitto}" ]; then
-	echo "- Restarting mosquitto"
-	pidof systemd && systemctl -q restart mosquitto
+if [ -n "${restart_rabbitmq}" ]; then
+	echo "- Restarting RabbitMQ server"
+	pidof systemd && systemctl -q restart rabbitmq-server
 fi
 if [ -n "${restart_telegraf}" ]; then
 	echo "- Restarting telegraf"
@@ -111,7 +108,7 @@ if [ -n "${restart_piot}" ]; then
 	echo "- Restarting piot and piot-update.timer"
 	pidof systemd && systemctl -q restart piot piot-update.timer
 fi
-for unit in mosquitto telegraf piot piot-update.timer; do
+for unit in rabbitmq-server telegraf piot piot-update.timer; do
 	if systemctl -q is-enabled "${unit}"; then
 		echo "- Enabling ${unit}"
 		systemctl -q enable  "${unit}"
