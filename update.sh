@@ -4,23 +4,15 @@ die() { [ "$#" -eq 0 ] || echo "$*" >&2; exit 1; }
 
 usage() {
 	cat <<- EOM
-		Usage: $0 [options] [cfg_url]
+		Usage: $0 [options] [cfg_dir]
 
 		Arguments:
-		  cfg_url  URL to search for configuration files (defaults to PIOT_CFG_URL)
+		  cfg_url  Directory to search for configuration files
+		           (defaults to ../piot-config)
 
 		Options:
-		  -h  Show this help message
+		  -h       Show this help message
 	EOM
-}
-
-download_github_file() {
-	url="${1?"URL not provided"}"
-	path="${2?"Path not provided"}"
-	res="$(wget "${url}" -qO-)" || \
-		die "Configuration file not found at '${url}'"
-	echo "${res}" | tr -d '\r\n' | jq -r '.content' | base64 -d > "${path}"
-	echo "- Downloaded '${url}' to '${path}'"
 }
 
 # Parse arguments
@@ -32,15 +24,12 @@ done
 shift $(( OPTIND - 1 ))
 
 SRC_DIR="$(dirname "$(realpath "$0")")"
-
-CFG_URL="${1:-${PIOT_CONFIG_URL}}"
-CFG_URL="${CFG_URL?"Configuration URL not provided"}"
-
-cd "${SRC_DIR}"
+CFG_DIR="${1:-"$(dirname "${SRC_DIR}")/piot-config"}"
 
 # Installation
 
 echo "[$(date -Ins)] Checking source code updates"
+cd "${SRC_DIR}"
 git fetch > /dev/null
 code_changed="$(git log --oneline master..origin/master 2> /dev/null)"
 status=0
@@ -68,34 +57,40 @@ else
 	git submodule update --remote > /dev/null
 
 	echo "Reinstalling"
-	"./install.sh" ${args} "${CFG_URL}" && status=0 || status=1
+	"./install.sh" ${args} && status=0 || status=1
+	restart_piot=true
 fi
 
-# Configuration files
+# Configuration
 
-echo "Updating configuration files"
-download_github_file "${CFG_URL}/advanced.config" "${TMP_DIR}/advanced.config"
-file="/etc/rabbitmq/advanced.config"
-if [ ! -e "${file}" ] || ! diff -q "${TMP_DIR}/advanced.config" "${file}" > /dev/null; then
-	mv "${TMP_DIR}/advanced.config" "${file}"
+
+echo "[$(date -Ins)] Checking configuration updates"
+cd "${CFG_DIR}"
+git reset --hard origin/master > /dev/null
+# TODO: Make this automatic through configuration file inside repo
+#       ifile:ofile:services...
+ifile="$(hostname)/advanced.config"
+ofile="/etc/rabbitmq/advanced.config"
+if [ ! -e "${ofile}" ] || ! diff -q "${ifile}" "${ofile}" > /dev/null; then
+	cp "${ifile}" "${ofile}"
 	restart_rabbitmq=true
 fi
-download_github_file "${CFG_URL}/telegraf.conf" "${TMP_DIR}/telegraf.conf"
-file="/etc/telegraf/telegraf.conf"
-if [ ! -e "${file}" ] || ! diff -q "${TMP_DIR}/telegraf.conf" "${file}" > /dev/null; then
-	mv "${TMP_DIR}/telegraf.conf" "${file}"
+ifile="$(hostname)/telegraf.conf"
+ofile="/etc/telegraf/telegraf.conf"
+if [ ! -e "${ofile}" ] || ! diff -q "${ifile}" "${ofile}" > /dev/null; then
+	cp "${ifile}" "${ofile}"
 	restart_telegraf=true
 fi
-download_github_file "${CFG_URL}/piot.conf" "${TMP_DIR}/piot.conf"
-file="/etc/piot.conf"
-if [ ! -e "${file}" ] || ! diff -q "${TMP_DIR}/piot.conf" "${file}" > /dev/null; then
-	mv "${TMP_DIR}/piot.conf" "${file}"
+ifile="$(hostname)/piot.conf"
+ofile="/etc/piot.conf"
+if [ ! -e "${ofile}" ] || ! diff -q "${ifile}" "${ofile}" > /dev/null; then
+	cp "${ifile}" "${ofile}"
 	restart_piot=true
 fi
 
 # Services
 
-echo "Setting up services"
+echo "[$(date -Ins)] Setting up services"
 if [ -n "${restart_rabbitmq}" ]; then
 	echo "- Restarting RabbitMQ server"
 	pidof systemd && systemctl -q restart rabbitmq-server
@@ -118,4 +113,6 @@ for unit in rabbitmq-server telegraf piot piot-update.timer; do
 		systemctl -q restart "${unit}"
 	fi
 done
-systemctl daemon-reload 2> /dev/null
+pidof systemd && systemctl daemon-reload
+
+echo "[$(date -Ins)] Finished"
