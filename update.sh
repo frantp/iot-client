@@ -104,11 +104,11 @@ if [ -n "${restart_piot}" ]; then
 	pidof systemd && systemctl -q restart piot piot-update.timer
 fi
 for unit in rabbitmq-server telegraf piot piot-update.timer; do
-	if systemctl -q is-enabled "${unit}"; then
+	if ! systemctl -q is-enabled "${unit}"; then
 		echo "- Enabling ${unit}"
-		systemctl -q enable  "${unit}"
+		systemctl -q enable "${unit}"
 	fi
-	if pidof systemd && systemctl -q is-active  "${unit}"; then
+	if pidof systemd && ! systemctl -q is-active "${unit}"; then
 		echo "- Starting ${unit}"
 		systemctl -q restart "${unit}"
 	fi

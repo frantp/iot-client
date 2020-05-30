@@ -37,18 +37,18 @@ mkdir -p "${LIB_DIR}" "${LOG_DIR}" "${TMP_DIR}"
 cd "${SRC_DIR}"
 
 # System dependencies
+. "/etc/os-release"
+curl -sL "https://repos.influxdata.com/influxdb.key" | \
+	APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 apt-key add - > /dev/null
+echo "deb https://repos.influxdata.com/debian ${VERSION_CODENAME} stable" \
+	> "/etc/apt/sources.list.d/influxdb.list"
 if [ -z "${omit_system_reqs}" ]; then
 	echo "Installing system dependencies..."
-    . "/etc/os-release"
-    curl -sL "https://repos.influxdata.com/influxdb.key" | \
-        APT_KEY_DONT_WARN_ON_DANGEROUS_USAGE=1 apt-key add - > /dev/null
-    echo "deb https://repos.influxdata.com/debian ${VERSION_CODENAME} stable" \
-        > "/etc/apt/sources.list.d/influxdb.list"
     apt-get -qq update
     DEBIAN_FRONTEND=noninteractive \
         apt-get -qq install $(cat dependencies.txt | tr '\n' ' ')
-	rabbitmq-plugins enable rabbitmq_shovel
 fi
+rabbitmq-plugins -s enable --offline rabbitmq_shovel
 
 # Python requirements
 if [ -z "${omit_python_reqs}" ]; then
