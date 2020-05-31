@@ -48,7 +48,8 @@ if [ -z "${omit_system_reqs}" ]; then
     DEBIAN_FRONTEND=noninteractive \
         apt-get -qq install $(cat dependencies.txt | tr '\n' ' ')
 fi
-echo "[rabbitmq_shovel]." > "/etc/rabbitmq/enabled_plugins"
+echo "[rabbitmq_management, rabbitmq_shovel, rabbitmq_shovel_managememt]." \
+	> "/etc/rabbitmq/enabled_plugins"
 
 # Python requirements
 if [ -z "${omit_python_reqs}" ]; then

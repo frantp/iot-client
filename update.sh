@@ -63,13 +63,18 @@ fi
 
 # Configuration
 
-
 echo "[$(date -Ins)] Checking configuration updates"
 cd "${CFG_DIR}"
 git fetch > /dev/null
 git reset --hard origin/master > /dev/null
 # TODO: Make this automatic through configuration file inside repo
 #       ifile:ofile:services...
+ifile="$(hostname)/rabbitmq.conf"
+ofile="/etc/rabbitmq/rabbitmq.conf"
+if [ ! -e "${ofile}" ] || ! diff -q "${ifile}" "${ofile}" > /dev/null; then
+	cp "${ifile}" "${ofile}"
+	restart_rabbitmq=true
+fi
 ifile="$(hostname)/advanced.config"
 ofile="/etc/rabbitmq/advanced.config"
 if [ ! -e "${ofile}" ] || ! diff -q "${ifile}" "${ofile}" > /dev/null; then
