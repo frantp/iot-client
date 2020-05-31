@@ -66,6 +66,7 @@ fi
 
 echo "[$(date -Ins)] Checking configuration updates"
 cd "${CFG_DIR}"
+git fetch > /dev/null
 git reset --hard origin/master > /dev/null
 # TODO: Make this automatic through configuration file inside repo
 #       ifile:ofile:services...
