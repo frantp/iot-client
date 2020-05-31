@@ -91,28 +91,34 @@ fi
 # Services
 
 echo "[$(date -Ins)] Setting up services"
-if [ -n "${restart_rabbitmq}" ]; then
-	echo "- Restarting RabbitMQ server"
-	pidof systemd && systemctl -q restart rabbitmq-server
-fi
-if [ -n "${restart_telegraf}" ]; then
-	echo "- Restarting telegraf"
-	pidof systemd && systemctl -q restart telegraf
-fi
-if [ -n "${restart_piot}" ]; then
-	echo "- Restarting piot and piot-update.timer"
-	pidof systemd && systemctl -q restart piot piot-update.timer
+if pidof -q systemd; then
+	if [ -n "${restart_rabbitmq}" ] ||
+	   [ -n "${restart_telegraf}" ] ||
+	   [ -n "${restart_piot}" ]; then
+		systemctl daemon-reload
+	fi
+	if [ -n "${restart_rabbitmq}" ]; then
+		echo "- Restarting RabbitMQ server"
+		systemctl -q restart rabbitmq-server
+	fi
+	if [ -n "${restart_telegraf}" ]; then
+		echo "- Restarting telegraf"
+		systemctl -q restart telegraf
+	fi
+	if [ -n "${restart_piot}" ]; then
+		echo "- Restarting piot and piot-update.timer"
+		systemctl -q restart piot piot-update.timer
+	fi
 fi
 for unit in rabbitmq-server telegraf piot piot-update.timer; do
 	if ! systemctl -q is-enabled "${unit}"; then
 		echo "- Enabling ${unit}"
 		systemctl -q enable "${unit}"
 	fi
-	if pidof systemd && ! systemctl -q is-active "${unit}"; then
+	if pidof -q systemd && ! systemctl -q is-active "${unit}"; then
 		echo "- Starting ${unit}"
 		systemctl -q restart "${unit}"
 	fi
 done
-pidof systemd && systemctl daemon-reload
 
 echo "[$(date -Ins)] Finished"
