@@ -1,5 +1,5 @@
 [Unit]
-Description=Run updater at startup and also periodically
+Description=Run Piot updates at startup and also periodically
 After=network-online.target
 Wants=network-online.target
 

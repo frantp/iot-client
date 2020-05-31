@@ -1,10 +1,10 @@
 [Unit]
-Description=Sensor Reader
+Description=Piot client for IoT on a Raspberry Pi
 After=mosquitto.service
 Wants=mosquitto.service
 
 [Service]
-ExecStart=/bin/sh -c '/usr/local/bin/piot /etc/piot.conf >> /var/log/piot/piot.data 2>> /var/log/piot/piot.log'
+ExecStart=/bin/sh -c '/usr/local/bin/piot /etc/piot.conf >> /var/log/piot/piot.log 2>&1'
 Restart=on-failure
 
 [Install]

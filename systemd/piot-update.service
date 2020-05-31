@@ -1,5 +1,5 @@
 [Unit]
-Description=Update Sensor Reader
+Description=Update Piot client
 After=network-online.target
 Wants=network-online.target
 
