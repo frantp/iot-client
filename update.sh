@@ -30,7 +30,7 @@ CFG_DIR="${1:-"$(dirname "${SRC_DIR}")/piot-config"}"
 
 echo "[$(date -Ins)] Checking source code updates"
 cd "${SRC_DIR}"
-git fetch > /dev/null
+git fetch -q
 code_changed="$(git log --oneline master..origin/master 2> /dev/null)"
 status=0
 if [ -z "${code_changed}" ]; then
@@ -53,8 +53,8 @@ else
 	cd ".."
 
 	echo "Updating source code"
-	git reset --hard origin/master > /dev/null
-	git submodule update --remote > /dev/null
+	git reset -q --hard origin/master
+	git submodule -q update --remote
 
 	echo "Reinstalling"
 	"./install.sh" ${args} && status=0 || status=1
@@ -65,8 +65,8 @@ fi
 
 echo "[$(date -Ins)] Checking configuration updates"
 cd "${CFG_DIR}"
-git fetch > /dev/null
-git reset --hard origin/master > /dev/null
+git fetch -q
+git reset -q --hard origin/master > /dev/null
 # TODO: Make this automatic through configuration file inside repo
 #       ifile:ofile:services...
 ifile="$(hostname)/rabbitmq.conf"
