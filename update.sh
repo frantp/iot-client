@@ -70,24 +70,36 @@ git reset -q --hard origin/master > /dev/null
 # TODO: Make this automatic through configuration file inside repo
 #       ifile:ofile:services...
 ifile="$(hostname)/rabbitmq.conf"
+if [ ! -e "${ifile}" ]; then
+	ifile="rabbitmq.conf"
+fi
 ofile="/etc/rabbitmq/rabbitmq.conf"
 if [ ! -e "${ofile}" ] || ! diff -q "${ifile}" "${ofile}" > /dev/null; then
 	cp "${ifile}" "${ofile}"
 	restart_rabbitmq=true
 fi
 ifile="$(hostname)/advanced.config"
+if [ ! -e "${ifile}" ]; then
+	ifile="advanced.config"
+fi
 ofile="/etc/rabbitmq/advanced.config"
 if [ ! -e "${ofile}" ] || ! diff -q "${ifile}" "${ofile}" > /dev/null; then
 	cp "${ifile}" "${ofile}"
 	restart_rabbitmq=true
 fi
 ifile="$(hostname)/telegraf.conf"
+if [ ! -e "${ifile}" ]; then
+	ifile="telegraf.conf"
+fi
 ofile="/etc/telegraf/telegraf.conf"
 if [ ! -e "${ofile}" ] || ! diff -q "${ifile}" "${ofile}" > /dev/null; then
 	cp "${ifile}" "${ofile}"
 	restart_telegraf=true
 fi
 ifile="$(hostname)/piot.conf"
+if [ ! -e "${ifile}" ]; then
+	ifile="piot.conf"
+fi
 ofile="/etc/piot.conf"
 if [ ! -e "${ofile}" ] || ! diff -q "${ifile}" "${ofile}" > /dev/null; then
 	cp "${ifile}" "${ofile}"
