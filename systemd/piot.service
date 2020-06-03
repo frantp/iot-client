@@ -1,7 +1,7 @@
 [Unit]
 Description=Piot client for IoT on a Raspberry Pi
-After=mosquitto.service
-Wants=mosquitto.service
+After=time-sync.target
+Wants=time-sync.target
 
 [Service]
 ExecStart=/bin/sh -c '/usr/local/bin/piot /etc/piot.conf >> /var/log/piot/piot.log 2>&1'

@@ -128,6 +128,11 @@ if pidof -q systemd; then
 		systemctl -q restart piot piot-update.timer
 	fi
 fi
+unit="systemd-time-wait-sync"
+if ! systemctl -q is-enabled "${unit}"; then
+	echo "- Enabling ${unit}"
+	systemctl -q enable "${unit}"
+fi
 for unit in rabbitmq-server telegraf piot piot-update.timer; do
 	if ! systemctl -q is-enabled "${unit}"; then
 		echo "- Enabling ${unit}"
