@@ -24,7 +24,6 @@ done
 shift $(( OPTIND - 1 ))
 
 SRC_DIR="$(dirname "$(realpath "$0")")"
-SRV_DIR="/etc/systemd/system"
 LIB_DIR="/var/lib/piot"
 LOG_DIR="/var/log/piot"
 TMP_DIR="/run/piot"
@@ -64,9 +63,9 @@ fi
 echo "Installing Piot..."
 chmod +x *.sh
 ln -sf "${SRC_DIR}/piot.sh" "${MAIN_EXE}"  # Main exe
-for unit in piot.service piot-update.service piot-update.timer; do
-	ln -sf "${SRC_DIR}/systemd/${unit}" "${SRV_DIR}/${unit}"  # Services
-done
+find "systemd" -type f \
+	-exec sh -c 'mkdir -p "$(dirname "/etc/$0")"' "{}" \; \
+	-exec ln -sf "${SRC_DIR}/{}" "/etc/{}" \; # Services
 ln -sf "${SRC_DIR}/logrotate.conf" "${LOGROTATE_CFG}"  # Logrotate
 ln -sf "${SRC_DIR}/update.sh" "${UPDATER_EXE}"  # Updater
 
