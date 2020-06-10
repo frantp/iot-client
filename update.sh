@@ -113,6 +113,7 @@ if pidof -q systemd; then
 	if [ -n "${restart_rabbitmq}" ] ||
 	   [ -n "${restart_telegraf}" ] ||
 	   [ -n "${restart_piot}" ]; then
+		echo "- Reloading configuration"
 		systemctl daemon-reload
 	fi
 	if [ -n "${restart_rabbitmq}" ]; then
