@@ -61,7 +61,6 @@ fi
 
 # Piot
 echo "Installing Piot..."
-chmod +x *.sh
 ln -sf "${SRC_DIR}/piot.sh" "${MAIN_EXE}"  # Main exe
 find "systemd" -type f \
 	-exec sh -c 'mkdir -p "$(dirname "/etc/$0")"' "{}" \; \
