@@ -23,7 +23,7 @@ while getopts "h" arg; do
 done
 shift $(( OPTIND - 1 ))
 
-SRC_DIR="$(dirname "$(realpath "$0")")"
+SRC_DIR="/opt/piot-client"
 CFG_DIR="${1:-"$(dirname "${SRC_DIR}")/piot-config"}"
 
 # Installation
@@ -75,7 +75,7 @@ if [ ! -e "${ifile}" ]; then
 fi
 ofile="/etc/rabbitmq/rabbitmq.conf"
 if [ ! -e "${ofile}" ] || ! diff -q "${ifile}" "${ofile}" > /dev/null; then
-	cp "${ifile}" "${ofile}"
+	cp --remove-destination "${ifile}" "${ofile}"
 	restart_rabbitmq=true
 fi
 ifile="$(hostname)/advanced.config"
@@ -84,7 +84,7 @@ if [ ! -e "${ifile}" ]; then
 fi
 ofile="/etc/rabbitmq/advanced.config"
 if [ ! -e "${ofile}" ] || ! diff -q "${ifile}" "${ofile}" > /dev/null; then
-	cp "${ifile}" "${ofile}"
+	cp --remove-destination "${ifile}" "${ofile}"
 	restart_rabbitmq=true
 fi
 ifile="$(hostname)/telegraf.conf"
@@ -93,7 +93,7 @@ if [ ! -e "${ifile}" ]; then
 fi
 ofile="/etc/telegraf/telegraf.conf"
 if [ ! -e "${ofile}" ] || ! diff -q "${ifile}" "${ofile}" > /dev/null; then
-	cp "${ifile}" "${ofile}"
+	cp --remove-destination "${ifile}" "${ofile}"
 	restart_telegraf=true
 fi
 ifile="$(hostname)/piot.conf"
@@ -102,7 +102,7 @@ if [ ! -e "${ifile}" ]; then
 fi
 ofile="/etc/piot.conf"
 if [ ! -e "${ofile}" ] || ! diff -q "${ifile}" "${ofile}" > /dev/null; then
-	cp "${ifile}" "${ofile}"
+	cp --remove-destination "${ifile}" "${ofile}"
 	restart_piot=true
 fi
 
@@ -146,3 +146,5 @@ for unit in rabbitmq-server telegraf piot piot-update.timer; do
 done
 
 echo "[$(date -Ins)] Finished"
+
+cp --remove-destination "${SRC_DIR}/update.sh" "/usr/local/bin/piot-update" && exit 0

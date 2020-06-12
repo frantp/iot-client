@@ -28,7 +28,6 @@ LIB_DIR="/var/lib/piot"
 LOG_DIR="/var/log/piot"
 TMP_DIR="/run/piot"
 MAIN_EXE="/usr/local/bin/piot"
-UPDATER_EXE="/usr/local/bin/piot-update"
 LOGROTATE_CFG="/etc/logrotate.d/piot"
 
 mkdir -p "${LIB_DIR}" "${LOG_DIR}" "${TMP_DIR}"
@@ -66,6 +65,5 @@ find "systemd" -type f \
 	-exec sh -c 'mkdir -p "$(dirname "/etc/$0")"' "{}" \; \
 	-exec ln -sf "${SRC_DIR}/{}" "/etc/{}" \; # Services
 ln -sf "${SRC_DIR}/logrotate.conf" "${LOGROTATE_CFG}"  # Logrotate
-ln -sf "${SRC_DIR}/update.sh" "${UPDATER_EXE}"  # Updater
 
 echo "Finished"
