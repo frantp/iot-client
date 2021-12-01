@@ -54,7 +54,7 @@ if [ -z "${omit_python_reqs}" ]; then
 	echo "Installing Python requirements..."
 	python3 -m venv "${LIB_DIR}/env"
 	. "${LIB_DIR}/env/bin/activate"
-	python3 -m pip3 install --no-cache-dir -r "piot/requirements.txt"
+	python3 -m pip install --no-cache-dir -r "piot/requirements.txt"
 	deactivate
 fi
 
